@@ -11,7 +11,7 @@ class PostController extends Controller
     //
     public function index()
     {
-        $posts = Post::all();
+        $posts = Post::orderBy('id')->paginate();
 
         return view('admin.posts.index', compact('posts'));
     }
@@ -45,6 +45,43 @@ class PostController extends Controller
 
         return redirect()
             ->route('posts.index')
-            ->with('message','Post deletado com sucesso');
+            ->with('message', 'Post deletado com sucesso');
     }
+
+
+    public function edit($id)
+    {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return redirect()->back();
+        }
+        return view('admin.posts.edit', compact('post'));
+    }
+
+    public function update(StoreUpdatePost $request, $id)
+    {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return redirect()->back();
+        }
+        $post->update($request->all());
+
+        return redirect()
+            ->route('posts.index')
+            ->with('message', 'Post editado com sucesso');
+    }
+
+    public function search(Request $request)
+    {
+        $filters = $request->except('_token');
+
+        $posts = Post::where('title', 'LIKE', "%{$request->search}%")
+            ->orWhere('content', 'LIKE', "%{$request->search}%")
+            ->paginate();
+
+        return view('admin.posts.index', compact('posts','filters'));
+    }
+
 }
